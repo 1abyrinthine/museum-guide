@@ -348,7 +348,7 @@ const EXHIBITS = [
   },
   {
     id:1, img:'https://1abyrinthine.github.io/museum-guide/id1.jpg', 
-    name:'圭表', py:'guī biǎo', key:true, floor:5, loc:'五楼 · A区', tags:['测天', '重点'], visited: false,
+    name:'圭表', py:'guī biǎo', key:true, floor:5, loc:'五楼 · 古代计量区', tags:['测天', '重点'], visited: false,
     desc:'圭表是中国古代用于观测天文气象和制定历法的重要仪器。它由两个基本结构组成：直立在平地上的标竿称为“臬”或“表”，而正南正北方向平放的刻度尺则称为“圭”。<br><br>由于地球围绕太阳公转时存在倾角，古人每天中午测量“表”在“圭”上投下的影长。当影子达到一年中最长的那天，即为“冬至”；影子最短的那天，即为“夏至”。通过连续多年记录两次冬至之间相隔的天数，古人极其精确地计算出了“回归年”的长度，这直接决定了农历的置闰推算。',
     whyMade:'农业社会最迫切需要知道“何时播种、何时收割”——圭表通过找到影子最短（夏至）和最长（冬至）的两天，精确测出一年的长度，指导国家农业历法制定。',
     anim: 'gnomon',
@@ -392,7 +392,7 @@ const EXHIBITS = [
 
   {
     id:5, img:'https://1abyrinthine.github.io/museum-guide/id5.jpg',
-    name:'记里鼓车', py:'jì lǐ gǔ chē', key:true, floor:5, loc:'五楼 · C区', tags:['测距', '重点'], visited: false,
+    name:'记里鼓车', py:'jì lǐ gǔ chē', key:true, floor:5, loc:'五楼 · 机械仪器区', tags:['测距', '重点'], visited: false,
     desc:'记里鼓车是中国古代用于测量道路里程的机械装置，堆称世界上最早的“里程表”。其核心机构由车轮→减速齿轮组→凸轮→击锤层层传动：车轮每转动一定圈数（对应行进一里），最终级齿轮拨动击锤，使车上木人自动敏击一声鼓，通过计鼓声数即可得到行进里数。整套系统的关键在于减速齿轮组的齿数比设计——工匠须根据车轮周长和当时一里的长度，精确计算齿轮比，才能保证“恰好走一里敲一鼓”的精度。',
     whyMade:'古代军队行军、工程勘测、邮驿路程计算都需要准确记录距离——靠士兵计步极易出错，记里鼓车用纯机械方式实现了客观、可重复的距离测量。',
     anim: 'odograph',
@@ -409,22 +409,22 @@ const EXHIBITS = [
 const ROUTES = {
   rec: [
     {n:'五楼入口', sub:'从序厅开始参观', isStop:false},
-    {n:'日晷', sub:'五楼A区 · 测时仪器', isStop:true, id:0},
-    {n:'圭表', sub:'五楼A区 · 测天仪器，与日晷相邻', isStop:true, id:1},
+    {n:'日晷', sub:'五楼 · 测时仪器', isStop:true, id:0},
+    {n:'圭表', sub:'五楼 · 测天仪器，与日晷相邻', isStop:true, id:1},
     {n:'漏刻', sub:'五楼B区 · 全天候测时装置', isStop:true, id:2},
-    {n:'指南车', sub:'五楼C区 · 机械测向仪器', isStop:true, id:3},
-    {n:'记里鼓车', sub:'五楼C区 · 机械里程计，与指南车相邻', isStop:true, id:5},
+    {n:'指南车', sub:'五楼 · 机械测向仪器', isStop:true, id:3},
+    {n:'记里鼓车', sub:'五楼 · 机械里程计，与指南车相邻', isStop:true, id:5},
     {n:'楼层衔接', sub:'沿指引牌下楼，四楼风格不同但同属博物馆', isStop:false, isAnchor:true},
     {n:'导览结束', sub:'四楼出口，感谢参观', isStop:false}
   ],
   full: [
     {n:'五楼入口', sub:'从序厅开始参观', isStop:false},
     {n:'远古计量展区', sub:'旧石器时代身体计量', isStop:false},
-    {n:'日晷', sub:'五楼A区', isStop:true, id:0},
-    {n:'圭表', sub:'五楼A区', isStop:true, id:1},
+    {n:'日晷', sub:'五楼 · 古代计量区', isStop:true, id:0},
+    {n:'圭表', sub:'五楼 · 古代计量区', isStop:true, id:1},
     {n:'漏刻', sub:'五楼B区', isStop:true, id:2},
-    {n:'指南车', sub:'五楼C区', isStop:true, id:3},
-    {n:'记里鼓车', sub:'五楼C区', isStop:true, id:5},
+    {n:'指南车', sub:'五楼 · 机械仪器区', isStop:true, id:3},
+    {n:'记里鼓车', sub:'五楼 · 机械仪器区', isStop:true, id:5},
     {n:'秦汉量器区', sub:'五楼D区·度量衡演变', isStop:false},
     {n:'楼层衔接', sub:'沿指引牌下楼，四楼风格不同但同属博物馆', isStop:false, isAnchor:true},
     {n:'铁质砝码', sub:'四楼D区 · 近现代计量', isStop:true, id:4},
