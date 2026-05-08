@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>中国计量大学计量博物馆自助导览</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #f4f0e8; --bg2: #ebe5d8; --bg3: #dfd7c5;
+  --ink: #1c1710; --ink2: #4a3f2f; --muted: #8a7d68;
+  --gold: #9a6f2a; --gold2: #c49a45; --gold3: #e8c97a;
+  --teal: #1a6b6b; --teal2: #2a9494; --red: #8b2020; --green: #2b7a2b;
+  --border: rgba(154,111,42,0.2); --border2: rgba(154,111,42,0.4);
+}
+body { background: #333; display: flex; justify-content: center; font-family: 'PingFang SC', 'Noto Sans SC', sans-serif; }
+#app {
+  width: 100%; max-width: 400px; height: 100vh; max-height: 850px;
+  background: var(--bg); position: relative; overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+}
+
+/* 页面切换与基础组件 */
+.screen { display: none; flex-direction: column; height: 100%; flex: 1; overflow: hidden; animation: fadeIn 0.25s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Topbar */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; background: var(--bg); position: sticky; top: 0; z-index: 20; min-height: 48px; border-bottom: 0.5px solid var(--border2); }
+.topbar-title { font-size: 16px; font-weight: 600; color: var(--ink); text-align: center; flex: 1; }
+.topbar-back { color: var(--gold); font-size: 24px; cursor: pointer; padding: 4px; flex-shrink: 0; width: 32px;}
+.topbar-action { font-size: 13px; color: var(--gold); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid var(--gold); border-radius: 999px; padding: 4px 10px; flex-shrink: 0;}
+.topbar-action.visited { color: var(--green); border-color: var(--green); background: #e8f5e9; pointer-events: none;}
+.topbar-spacer { width: 32px; flex-shrink: 0; }
+
+/* 进度条与预计时间样式 */
+.progress-wrap { background: var(--bg); padding: 12px 16px; border-bottom: 0.5px solid var(--border2); }
+.progress-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.progress-bar-bg { width: 100%; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.4s cubic-bezier(0.1, 0.88, 0.3, 1); }
+.time-badge { font-weight: 600; color: var(--gold); background: rgba(154,111,42,0.1); padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+
+.tabbar { display: flex; border-top: 0.5px solid var(--border2); background: var(--bg); padding-bottom: env(safe-area-inset-bottom); position: relative; z-index: 20;}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 10px; gap: 4px; cursor: pointer; font-size: 10px; color: var(--muted); transition: color 0.15s; }
+.tab.active { color: var(--gold); }
+.tab i { font-size: 22px; }
+
+.content-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+.sec-head { padding: 16px 16px 8px; display: flex; align-items: center; justify-content: space-between; }
+.sec-title { font-size: 13px; color: var(--muted); letter-spacing: 1px; font-weight: 600; }
+.sec-more { font-size: 12px; color: var(--gold); cursor: pointer; padding: 4px; }
+
+/* 标签与列表 */
+.chip { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 4px; padding: 2px 8px; font-size: 10px; color: var(--gold); white-space: nowrap; }
+.chip.key { background: rgba(154,111,42,0.12); color: var(--gold); border-color: var(--gold2); font-weight: 600;}
+.chip.visited { background: #e8f5e9; color: var(--green); border-color: var(--green); }
+.ex-row { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+.ex-thumb { width: 56px; height: 56px; border-radius: 10px; background: var(--bg2); flex-shrink: 0; overflow: hidden; border: 0.5px solid var(--border2); }
+.ex-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ex-name { font-size: 15px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px;}
+.ex-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.ex-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;}
+
+/* ─── 迎新路线选择页 ─── */
+.ob-hero { height: 35%; background: #231e14; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--gold3); text-align: center; padding: 20px;}
+.ob-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: 2px;}
+.ob-sub { font-size: 13px; color: var(--muted); }
+.ob-card { background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; margin: 16px; display: flex; gap: 12px; align-items: center; cursor: pointer; transition: 0.2s; position: relative;}
+.ob-card.active { border: 2px solid var(--gold); background: #fff9ec; box-shadow: 0 4px 12px rgba(154,111,42,0.15); }
+.ob-card.active::after { content: '✓'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--gold); font-weight: bold;}
+.ob-card-icon { font-size: 32px; background: var(--bg2); padding: 12px; border-radius: 50%; color: var(--gold); }
+.ob-btn-start { margin: 20px 16px; background: var(--gold); color: #1c1710; border: none; border-radius: 8px; padding: 14px; font-size: 16px; font-weight: bold; text-align: center; cursor: pointer; }
+.ob-btn-skip { text-align: center; font-size: 13px; color: var(--muted); padding: 10px; cursor: pointer; text-decoration: underline;}
+
+/* ─── 首页与全屏地图 ─── */
+.home-header { background: #231e14; padding: 16px 16px 20px; }
+.floor-pill-group { display: flex; gap: 8px; margin-bottom: 12px; }
+.floor-pill { flex: 1; text-align: center; padding: 8px 0; border-radius: 8px; font-size: 13px; cursor: pointer; border: 0.5px solid rgba(154,111,42,0.3); color: #8a7d68; }
+.floor-pill.active { background: var(--gold); color: #1c1710; font-weight: 600; border-color: var(--gold); }
+.map-card { margin: 0 16px 8px; border: 0.5px solid var(--border2); border-radius: 12px; height: 160px; overflow: hidden; cursor: pointer; }
+.map-big-wrap { margin: 16px; border: 0.5px solid var(--border2); border-radius: 12px; overflow: hidden; height: 320px; }
+
+/* ─── 详情页模块与展开动效 ─── */
+.detail-hero { height: 240px; background-color: #231e14; background-size: cover; background-position: center; position: relative; }
+.detail-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(35,30,20,0.1) 0%, rgba(35,30,20,0.8) 100%); }
+.detail-pad { padding: 16px; margin-top: -20px; position: relative; z-index: 2; }
+.dsec { margin-bottom: 24px; }
+.dsec-title { font-size: 13px; color: var(--muted); padding-bottom: 6px; margin-bottom: 12px; border-bottom: 0.5px solid var(--border); font-weight: 600;}
+.dsec-text { font-size: 15px; color: var(--ink2); line-height: 1.8; position: relative;}
+
+.text-collapse { max-height: 130px; overflow: hidden; position: relative; transition: max-height 0.4s ease; }
+.text-collapse.expanded { max-height: 2500px; }
+.text-collapse::after { 
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 45px; 
+  background: linear-gradient(to bottom, rgba(244,240,232,0) 0%, rgba(244,240,232,1) 100%); 
+  pointer-events: none; opacity: 1; transition: opacity 0.4s;
+}
+.text-collapse.expanded::after { opacity: 0; }
+.expand-btn { display: block; width: 100%; text-align: center; font-size: 13px; color: var(--gold); background: none; border: none; padding: 8px 0; cursor: pointer; font-weight: 600; margin-top: -4px;}
+
+.term-link { color: var(--teal); border-bottom: 1px dashed var(--teal); font-weight: 600; cursor: pointer; padding: 0 2px; background: rgba(26,107,107,0.08); border-radius: 2px;}
+
+.analogy-collapse { background: #e8f5e9; border: 1px solid var(--green); border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: 0.2s; }
+.analogy-collapse-title { font-size: 14px; font-weight: 600; color: var(--green); display: flex; align-items: center; justify-content: space-between; }
+.analogy-collapse-title span { display: flex; align-items: center; gap: 6px; }
+.analogy-collapse-content { font-size: 14px; color: var(--ink2); line-height: 1.6; display: none; margin-top: 10px; padding-top: 10px; border-top: 0.5px dashed rgba(43, 122, 43, 0.4); }
+.analogy-collapse.open { background: #dff0e0; }
+.analogy-collapse.open .analogy-collapse-content { display: block; }
+.analogy-collapse.open .arrow-icon { transform: rotate(180deg); }
+
+.converter-box { background: #fff9ec; border: 1px solid var(--gold2); border-radius: 12px; padding: 16px; }
+.conv-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.conv-inp { flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 10px; font-size: 16px; font-weight: 600; text-align: center; color: var(--ink); outline: none;}
+.conv-result { background: #231e14; border-radius: 8px; padding: 12px; font-size: 14px; color: var(--gold3); line-height: 1.6; }
+
+/* 术语半屏字典弹窗 */
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.bottom-sheet { position: absolute; bottom: 0; left: 0; right: 0; z-index: 100; background: var(--bg); border-radius: 20px 20px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.1, 0.88, 0.3, 1); box-shadow: 0 -4px 20px rgba(0,0,0,0.2); }
+.bottom-sheet.show { transform: translateY(0); }
+.bs-handler { width: 40px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
+.bs-title { font-size: 24px; font-weight: 700; color: var(--ink); display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.bs-py { font-size: 16px; color: var(--gold); font-weight: 400; font-family: sans-serif; letter-spacing: 1px;}
+.bs-desc { font-size: 15px; color: var(--ink2); line-height: 1.7; background: var(--bg2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
+.bs-close-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg2); display: flex; justify-content: center; align-items: center; color: var(--ink); font-size: 20px; cursor: pointer; }
+
+/* 测验 UI */
+.quiz-box { background: #231e14; border: 1px solid var(--border2); border-radius: 12px; padding: 16px; }
+.quiz-q { font-size: 14px; color: var(--gold3); font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
+.quiz-opt { background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 12px; margin-bottom: 8px; font-size: 13px; color: var(--ink); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;}
+.quiz-opt.correct { background: #e8f5e9; border-color: var(--green); color: var(--green); font-weight: 600;}
+.quiz-opt.correct::after { content: '✓ 正确'; }
+.quiz-opt.wrong { background: #ffebee; border-color: var(--red); color: var(--red); }
+.quiz-opt.wrong::after { content: '✕ 错误'; }
+
+/* Timeline */
+.timeline { padding: 12px 16px 24px; }
+.tl-item { display: flex; gap: 12px; }
+.tl-spine { display: flex; flex-direction: column; align-items: center; width: 24px; }
+.tl-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--bg2); border: 2px solid var(--gold2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--gold); }
+.tl-dot.visited { background: var(--green); border-color: var(--green); color: white; }
+.tl-line { width: 2px; flex: 1; min-height: 30px; background: var(--border2); margin: 4px 0; }
+.tl-content { flex: 1; padding-bottom: 20px; }
+.tl-name { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+
+/* 悬浮底栏 */
+.detail-bottom-bar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border2); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 12px; z-index: 30; box-shadow: 0 -4px 12px rgba(0,0,0,0.05); }
+.btn-primary { flex: 2; background: var(--gold); color: #1c1710; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; cursor: pointer; }
+.btn-secondary { flex: 1; background: var(--bg2); color: var(--ink2); border: 0.5px solid var(--border2); border-radius: 8px; font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 44px; cursor: pointer; }
+
+/* 动画演示 */
+.anim-box { background: #231e14; border-radius: 12px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 24px; border: 1px solid var(--border2); }
+.anim-title { font-size: 13px; color: var(--gold2); letter-spacing: 1px; font-weight: 600; }
+.anim-svg-wrap { width: 100%; display: flex; justify-content: center; padding: 10px 0; }
+
+/* 打卡提示 */
+.toast-msg { position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #1c1710; color: var(--gold3); padding: 10px 20px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid var(--gold2); }
+.toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 扫码页强模拟感样式 */
+.scan-wrapper { position: relative; height: 100%; background: #000; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding-top: 100px;}
+.scan-camera-bg { position: absolute; inset: 0; background: url('https://dummyimage.com/400x800/333/555&text=Camera+Preview') center/cover; opacity: 0.4; }
+.scan-frame-container { position: relative; width: 240px; height: 240px; z-index: 2; margin-bottom: 40px; box-shadow: 0 0 0 999px rgba(0,0,0,0.6); border-radius: 12px;}
+.scan-frame-corner { position: absolute; width: 30px; height: 30px; border: 3px solid var(--gold); }
+.scan-frame-corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-top-left-radius: 12px;}
+.scan-frame-corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-top-right-radius: 12px;}
+.scan-frame-corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-bottom-left-radius: 12px;}
+.scan-frame-corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-bottom-right-radius: 12px;}
+.scan-laser { position: absolute; left: 0; width: 100%; height: 2px; background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: laser-scan 2s infinite linear; z-index: 3;}
+@keyframes laser-scan { 0% { top: 0%; opacity: 0;} 10% { opacity: 1;} 90% { opacity: 1;} 100% { top: 100%; opacity: 0;} }
+.scan-text { position: relative; z-index: 2; color: #fff; text-align: center; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="toast" class="toast-msg"><i class="ti ti-check"></i> 打卡成功！已点亮图标</div>
+
+<div id="s-onboard" class="screen active">
+  <div class="ob-hero">
+    <i class="ti ti-building-monument" style="font-size: 56px; margin-bottom: 12px;"></i>
+    <div class="ob-title">中国计量大学<br>计量博物馆</div>
+    <div class="ob-sub">轻量化自助导览系统</div>
+  </div>
+  <div class="content-scroll" style="padding-top: 10px;">
+    <div style="padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--ink2); margin-top: 12px;">请选择您的参观方式：</div>
+    <div class="ob-card active" id="card-rec" onclick="selectRouteMode('rec')">
+      <i class="ti ti-star ob-card-icon"></i>
+      <div>
+        <div style="font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px;">精华推荐路线</div>
+        <div style="font-size: 12px; color: var(--muted);">约 15 分钟 · 包含核心重点展品</div>
+      </div>
+    </div>
+    <div class="ob-card" id="card-full" onclick="selectRouteMode('full')">
+      <i class="ti ti-map-2 ob-card-icon"></i>
+      <div>
+        <div style="font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px;">全馆完整路线</div>
+        <div style="font-size: 12px; color: var(--muted);">约 45 分钟 · 包含五楼至四楼的所有展区</div>
+      </div>
+    </div>
+    <div class="ob-btn-start" onclick="startTour()">开启博物馆之旅</div>
+    <div class="ob-btn-skip" onclick="selectRouteMode('full'); startTour();">跳过，默认进入完整模式</div>
+  </div>
+</div>
+
+<div id="s-home" class="screen">
+  <div class="topbar">
+    <div class="topbar-spacer"></div>
+    <div class="topbar-title">计量博物馆</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span>参观进度 <span id="prog-text-home" style="margin-left:6px; font-weight:600; color:var(--ink)">0 / 5</span></span>
+      <span id="prog-time-home" class="time-badge"><i class="ti ti-clock"></i> 预计还需 15 分钟</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill-home"></div></div>
+  </div>
+  <div class="home-header" style="padding-top: 8px;">
+    <div class="floor-pill-group">
+      <div class="floor-pill active" id="fp-5" onclick="switchFloor(5)">五楼 · 古代计量</div>
+      <div class="floor-pill" id="fp-4" onclick="switchFloor(4)">四楼 · 近现代计量</div>
+    </div>
+    <div style="font-size: 12px; color: var(--gold); background: rgba(154,111,42,0.15); padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+      <i class="ti ti-map-pin"></i> <span id="anchor-text">当前位置：五楼序厅入口</span>
+    </div>
+  </div>
+  <div class="content-scroll" id="home-content">
+    <div class="sec-head"><span class="sec-title">当前楼层结构图</span></div>
+    <div class="map-card" onclick="goTab('map')"><svg id="mini-map-svg" viewBox="0 0 348 150" style="width:100%; height:100%;"></svg></div>
+    <div class="sec-head"><span class="sec-title">楼层重点展品</span><span class="sec-more" onclick="goTab('route')">查看路线 <i class="ti ti-chevron-right"></i></span></div>
+    <div id="home-exhibits"></div>
+  </div>
+  <div class="tabbar" id="main-tabbar"></div>
+</div>
+
+<div id="s-route" class="screen">
+  <div class="topbar">
+    <div class="topbar-spacer"></div>
+    <div class="topbar-title">游览路线</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span>参观进度 <span id="prog-text-route" style="margin-left:6px; font-weight:600; color:var(--ink)">0 / 5</span></span>
+      <span id="prog-time-route" class="time-badge"><i class="ti ti-clock"></i> 预计还需 15 分钟</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill-route"></div></div>
+  </div>
+  <div class="content-scroll">
+    <div style="padding: 12px 16px; font-size: 12px; color: var(--muted); background: var(--bg2); display: flex; justify-content: space-between; align-items: center;">
+      <span id="route-desc">当前模式：精华推荐路线</span><span style="color:var(--gold); cursor:pointer; text-decoration:underline" onclick="goTab('onboard')">重新选择</span>
+    </div>
+    <div class="timeline" id="route-timeline"></div>
+  </div>
+  <div class="tabbar" id="route-tabbar"></div>
+</div>
+
+<div id="s-map" class="screen">
+  <div class="topbar">
+    <div class="topbar-spacer"></div>
+    <div class="topbar-title">全屏地图</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="content-scroll">
+    <div class="sec-head" style="justify-content:center">
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:999px;display:flex;padding:4px;">
+        <div id="map-btn-5" style="padding:6px 20px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;background:var(--gold);color:#1c1710" onclick="mapFloor(5)">五楼 古代</div>
+        <div id="map-btn-4" style="padding:6px 20px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)" onclick="mapFloor(4)">四楼 近现代</div>
+      </div>
+    </div>
+    <div class="map-big-wrap"><svg id="map-big-svg" viewBox="0 0 348 260" style="width:100%;height:100%;display:block;"></svg></div>
+    <div style="padding: 0 16px;">
+      <div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:12px;font-size:12px;color:var(--ink2);">
+        <p style="margin-bottom:6px;font-weight:600;color:var(--muted)">图例指引</p>
+        <div style="display:flex;gap:16px;">
+          <span style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:var(--teal)"></div> 重点展品位置</span>
+          <span style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;border-radius:50%;background:#8b2020"></div> 路线起点</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tabbar" id="map-tabbar"></div>
+</div>
+
+<div id="s-scan" class="screen">
+  <div class="topbar" style="background:#1c1710; border-bottom: 0.5px solid #333">
+    <div class="topbar-spacer"></div>
+    <div class="topbar-title" style="color:#fff">靠近碰一碰或扫码</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="scan-wrapper">
+    <div class="scan-camera-bg"></div>
+    <div class="scan-frame-container">
+      <div class="scan-frame-corner tl"></div>
+      <div class="scan-frame-corner tr"></div>
+      <div class="scan-frame-corner bl"></div>
+      <div class="scan-frame-corner br"></div>
+      <div class="scan-laser"></div>
+    </div>
+    <div class="scan-text">
+      <p style="font-size:18px; font-weight:600; margin-bottom:8px;">对准展品二维码 或 NFC碰一碰</p>
+      <p style="font-size:13px; color:rgba(255,255,255,0.7); margin-bottom: 40px;">自动识别，无需拍照</p>
+      <button class="btn-primary" style="width:200px; margin: 0 auto; background:rgba(255,255,255,0.2); border:1px solid #fff; color:#fff;" onclick="showDetail(0)">
+        开发者模拟：载入【日晷】
+      </button>
+    </div>
+  </div>
+  <div class="tabbar" id="scan-tabbar" style="background: #1c1710; border-top: 1px solid #333;"></div>
+</div>
+
+<div id="s-detail" class="screen">
+  <div class="topbar">
+    <i class="ti ti-arrow-left topbar-back" onclick="goBack()" aria-label="返回"></i>
+    <div class="topbar-title" id="d-title">展品详情</div>
+    <div class="topbar-action" id="d-mark-action"></div>
+  </div>
+  <div class="content-scroll" id="detail-content" style="padding-bottom: 0;"></div>
+  <div class="detail-bottom-bar" id="detail-actions"></div>
+</div>
+
+<div class="modal-overlay" id="term-overlay" onclick="closeTermModal()"></div>
+<div class="bottom-sheet" id="term-sheet">
+  <div class="bs-handler"></div>
+  <div class="bs-close-btn" onclick="closeTermModal()"><i class="ti ti-x"></i></div>
+  <div style="font-size: 12px; color: var(--muted); margin-bottom: 4px;">博物馆词典</div>
+  <div class="bs-title" id="bs-term-title">词汇 <span class="bs-py" id="bs-term-py">pinyin</span></div>
+  <div class="bs-desc" id="bs-term-desc">释义</div>
+</div>
+
+</div>
+
+<script>
+// ─── 数据源 ───
+const EXHIBITS = [
+  {
+    id:0, img:'https://mmbiz.qpic.cn/sz_mmbiz_jpg/CkIvW1SyiaKnWnthaM2btMFDficjmMWXPjiaFFq2ZN55zGn6ELHiay7RxxLezkXoibNEeyCFEMVDVicpyavftabsFxA7iaduqAtBXfeCGQwbLuzdc0/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3', 
+    name:'日晷', py:'rì guǐ', key:true, floor:5, loc:'五楼', tags:['测时', '重点'], visited: false,
+    desc:'日晷是中国古代最普遍的测时仪器，其核心原理是利用太阳投影的移动来指示时刻。它主要由两部分组成：带有刻度的石质圆盘称为“晷盘”，而垂直穿过圆盘中心的铜针则称为“晷针”。<br><br>在使用时，必须保证晷盘平行于赤道面，晷针的上端精确指向北天极。随着地球的自转，阳光照射在晷针上产生的阴影，会像现代钟表的指针一样在晷盘上缓慢移动。古人通过观察影子落在哪一个刻度上，就能精准得知当前的“地方时”。',
+    whyMade:'没有时钟的时代，太阳是最可靠的计时工具，日晷正是把太阳变成时针的精妙装置。',
+    anim: 'sundial', 
+    analogy: '它用地球自转造成的影子移动来"读秒"，而晷盘倾角必须精确匹配当地纬度，否则读数就会出错，就像现代人的手表没有校准时区一样，堪称古代版的"钟表+GPS联动"。',
+    converter: { type: 'time', label: '将现代 24 小时换算为古代时辰' },
+    terms:[{t:'晷盘', py:'guǐ pán', d:'日晷的底盘，边缘刻有十二时辰和百刻的刻度，必须根据当地的纬度倾斜放置。'},{t:'晷针', py:'guǐ zhēn', d:'日晷中央的直针。它是地球自转轴在缩小版仪器上的投影，永远指向正北。'}],
+    quiz: { q: '日晷的晷盘必须倾斜放置，这个倾斜的角度是由什么决定的？', opts: ['当地的经度', '当地的纬度', '当前的季节', '摆放的时辰'], ans: 1 }
+  },
+  {
+    id:1, img:'https://mmbiz.qpic.cn/sz_mmbiz_jpg/CkIvW1SyiaKmsc6DibYhSx56iaQjycBZt3zCc3Yz7zaEqa5icjy5BXj96MUooiaFCDibvG8SBKyVibG7a0hS95AlzYhnHlm8JkSQwv5DntfTbUpBzQ/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3', 
+    name:'圭表', py:'guī biǎo', key:true, floor:5, loc:'五楼 · A区', tags:['测天', '重点'], visited: false,
+    desc:'圭表是中国古代用于观测天文气象和制定历法的重要仪器。它由两个基本结构组成：直立在平地上的标竿称为“臬”或“表”，而正南正北方向平放的刻度尺则称为“圭”。<br><br>由于地球围绕太阳公转时存在倾角，古人每天中午测量“表”在“圭”上投下的影长。当影子达到一年中最长的那天，即为“冬至”；影子最短的那天，即为“夏至”。通过连续多年记录两次冬至之间相隔的天数，古人极其精确地计算出了“回归年”的长度，这直接决定了农历的置闰推算。',
+    whyMade:'农业社会最迫切需要知道“何时播种、何时收割”——圭表通过找到影子最短（夏至）和最长（冬至）的两天，精确测出一年的长度，指导国家农业历法制定。',
+    anim: 'gnomon',
+    analogy: '就像古代的气象站数据记录仪，古人并不需要知道地球绕着太阳转，他们只需要每天记录影长，找到最高点和最低点，就能破解四季轮回的密码。',
+    converter: { type: 'shadow', label: '输入你的身高，换算夏至正午的影子长度' },
+    terms:[{t:'臬', py:'niè', d:'古代测日影所用的直立标杆，后来引申为标准、法度的意思（如“奉为圭臬”）。'},{t:'回归年', py:'huí guī nián', d:'太阳连续两次通过春分点的时间间隔，长度约为365.2422天。'}],
+    quiz: { q: '一年之中，哪一天的正午，圭表测量出的影子会是【最短】的？', opts: ['春分', '秋分', '夏至', '冬至'], ans: 2 }
+  },
+  {
+    id:2, img:'https://mmbiz.qpic.cn/sz_mmbiz_jpg/CkIvW1SyiaKnPicYwJiboGsoFvGSuNbNacE2bChicEcm1fjxynU20JBkcX188PxgcQBhMolLYaOUtB264KXcatbyqSOWOoq4dbDrS3A8IIMExlc/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3', 
+    name:'漏刻', py:'lòu kè', key:true, floor:5, loc:'五楼', tags:['测时', '重点'], visited: false,
+    desc:'漏刻是中国古代极其重要的全天候测时仪器。与日晷依赖阳光不同，它利用水流的匀速流动来计量时间。整个系统通常由储水壶、受水壶以及带有刻度的“刻箭”组成。<br><br>为了保证出水速度恒定，聪明的古人发明了“多级补偿壶”结构：将多个水壶上下串联，上面的壶不断给下面的壶补水，确保最下方的漏壶始终维持固定的水位，从而实现了匀速滴水。当受水壶中的水位逐渐上升，浮在水面上的刻箭也会随之升高，人们只需读取壶口对应的刻度，就能知道当前的时刻。',
+    whyMade:'日晷阴天和夜间失效，古人需要一种利用匀速水流实现的"无间断值班时钟"。',
+    anim: 'clepsydra',
+    analogy: '水压会随着水量的减少而变小，导致水流变慢。多级补偿壶的作用，就像现代电子表里的“稳压器”和“晶振”，强行利用物理规律让水流频率保持绝对恒定。',
+    converter: { type: 'clepsydra', label: '输入现代分钟，换算古代的"刻"' },
+    terms:[{t:'多级补偿壶', py:'duō jí bǔ cháng hú', d:'串联水壶让最下方出水壶保持恒定水位，抵消水压变化，从而实现匀速滴水。'},{t:'刻箭', py:'kè jiàn', d:'浮在受水壶水面上的标尺，上面刻有时间刻度。'}],
+    quiz: { q: '漏刻通常要设计好几个水壶连在一起（多级补偿），这是为了解决什么问题？', opts: ['为了装更多的水', '为了让最后一级的水流速度保持恒定匀速', '为了过滤水中的杂质', '为了外观更加宏伟'], ans: 1 }
+  },
+  {
+    id:3, img:'https://mmbiz.qpic.cn/mmbiz_jpg/CkIvW1SyiaKm3mPdOrqUib1Zgiac0BdLJ5Wiaf8E0EydTjbiaibLSZaZicpAERIG8hhICO2Evcuciau7nlJXVLY1VS8POgXqz0A6WKkmH4d83KZSjbA/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3', 
+    name:'指南车', py:'zhǐ nán chē', key:true, floor:5, loc:'五楼', tags:['机械', '重点'], visited: false,
+    desc:'指南车是中国古代一项代表机械控制巅峰的发明。与依靠磁石指极性的罗盘不同，指南车完全不带有磁性。它内部安装了一套极其复杂的“差动齿轮”系统。<br><br>当车辆直线行驶时，内部齿轮保持静止；一旦车辆向左或向右转弯，车轮的转速差会立即触发齿轮组进行精确的反向补偿，使得车顶的木人手臂始终如一地指向南方。这种在颠簸行军中依然能保持恒定指向的纯机械装置，是古代用于皇帝仪仗和迷雾中行军的神器。',
+    whyMade:'磁石罗盘容易受铁器干扰，指南车提供了纯机械式的方向指引方案。',
+    anim: 'carriage',
+    analogy: '它就像古代的车载“机械陀螺仪”。现代汽车转弯时，左右轮转速不同，需要用差速器保证平稳；指南车正是巧妙利用了左右轮的转速差，倒推回中央齿轮，抵消了车体的旋转。',
+    converter: { type: 'direction', label: '假如你绕场走圈，算算齿轮工作量' },
+    terms:[{t:'差动齿轮', py:'chā dòng chǐ lún', d:'将两个输入速度之差转化为输出的机构。指南车通过它抵消车体转弯带来的角度变化。'}],
+    quiz: { q: '指南车不具有磁性也能指南，它的核心运作原理是？', opts: ['利用风向吹动', '车轮带动内部差动齿轮进行机械补偿', '内置了重力感应装置', '车前有马拉动辨识方向'], ans: 1 }
+  },
+  {
+    id:4, img:'https://mmbiz.qpic.cn/mmbiz_jpg/CkIvW1SyiaKnEpDpDs2NkBbgBL8zgo4HRiaPguZsLg5SyjOib0h5AIomZO16vtTTZNrnCSlev2clpEg3dCLrUMQqoe1oVPvEVQoMwwC9L7V5EU/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3', 
+    name:'铁质砝码', py:'tiě fǎ mǎ', key:false, floor:4, loc:'四楼 近现代', tags:['近现代'], visited: false,
+    desc:'在清代以前，中国古代的砝码多采用铜或石质。然而铜质地较软，在日常频繁的称量交易中容易发生磨损，导致重量变轻、引发贸易纠纷。<br><br>随着清代冶金技术的突飞猛进，人们能够规模化地铸造纯度更高、质地更坚硬的铁质砝码。这些铁质基准器不仅造价更为低廉，更重要的是极其耐磨，即使历经几十年的频繁使用，其重量依然能保持极高的精确度，标志着古代度量衡标准化向前迈进了一大步。',
+    whyMade:'冶金技术成熟后，铁的硬度使得砝码即使经过长年使用，读数依然精准。',
+    analogy: '就像从容易刮花的“木质直尺”升级成了“不锈钢直尺”。基础材料科学的进步，直接拔高了整个社会商业贸易的精确度和公平性。',
+    converter: { type: 'weight', label: '输入重量(克)，换算清代库平两' },
+    terms:[{t:'基准器', py:'jī zhǔn qì', d:'用来校准其他所有测量工具的最标准的参考实物。'}],
+    quiz: { q: '为什么到了清代，人们开始普遍用铁来铸造砝码，而不是继续用铜？', opts: ['因为铁颜色更好看', '因为皇帝下令禁止用铜', '冶铁技术成熟，铁更硬更耐磨，重量不易改变', '铁更容易生锈'], ans: 2 }
+  },
+
+  {
+    id:5, img:'https://mmbiz.qpic.cn/mmbiz_jpg/CkIvW1SyiaKmLG4ibIicIFzoQJN6khqBNESeyDLEZS4Io7aFdlRsApzNlc3k9kg6WqY72lYocDhtwzpV0IdbjrezytCClrSllTFWkhPpibFCibiaY/0?wx_fmt=jpeg&from=appmsg&watermark=1&wxfrom=3',
+    name:'记里鼓车', py:'jì lǐ gǔ chē', key:true, floor:5, loc:'五楼 · C区', tags:['测距', '重点'], visited: false,
+    desc:'记里鼓车是中国古代用于测量道路里程的机械装置，堆称世界上最早的“里程表”。其核心机构由车轮→减速齿轮组→凸轮→击锤层层传动：车轮每转动一定圈数（对应行进一里），最终级齿轮拨动击锤，使车上木人自动敏击一声鼓，通过计鼓声数即可得到行进里数。整套系统的关键在于减速齿轮组的齿数比设计——工匠须根据车轮周长和当时一里的长度，精确计算齿轮比，才能保证“恰好走一里敲一鼓”的精度。',
+    whyMade:'古代军队行军、工程勘测、邮驿路程计算都需要准确记录距离——靠士兵计步极易出错，记里鼓车用纯机械方式实现了客观、可重复的距离测量。',
+    anim: 'odograph',
+    analogy: '记里鼓车就是古代的“汽车里程表”：现代汽车里程表通过车轮转速传感器累计公里数，记里鼓车用减速齿轮将转速信号转化为“每里一响”的鼓声——输出形式不同，机械逻辑完全相同。',
+    converter: { type: 'distance', label: '输入今天走的步数，换算成古代里数' },
+    terms:[
+      {t:'减速齿轮组', py:'jiǎn sù chǐ lún zǔ', d:'多个大小不同的齿轮串联，将车轮的快速旋转大幅减速后再输出，相当于现代变速筘的减速挡。'},
+      {t:'一里（汉代）', py:'yī lǐ', d:'汉代一里约等于今天415米，明清一里约500米。记里鼓车的齿轮比须根据所用朝代的“里”长度重新标定。'}
+    ],
+    quiz: { q: '记里鼓车每走一里敲一次鼓，核心依靠什么机构实现这个“计数”功能？', opts: ['弹簧发条储能释放', '多级减速齿轮组将车轮转动换算为里数', '水流定时触发机关', '磁石感应地面标记'], ans: 1 }
+  }
+];
+
+const ROUTES = {
+  rec: [
+    {n:'五楼入口', sub:'从序厅开始参观', isStop:false},
+    {n:'日晷', sub:'五楼A区 · 测时仪器', isStop:true, id:0},
+    {n:'圭表', sub:'五楼A区 · 测天仪器，与日晷相邻', isStop:true, id:1},
+    {n:'漏刻', sub:'五楼B区 · 全天候测时装置', isStop:true, id:2},
+    {n:'指南车', sub:'五楼C区 · 机械测向仪器', isStop:true, id:3},
+    {n:'记里鼓车', sub:'五楼C区 · 机械里程计，与指南车相邻', isStop:true, id:5},
+    {n:'楼层衔接', sub:'沿指引牌下楼，四楼风格不同但同属博物馆', isStop:false, isAnchor:true},
+    {n:'导览结束', sub:'四楼出口，感谢参观', isStop:false}
+  ],
+  full: [
+    {n:'五楼入口', sub:'从序厅开始参观', isStop:false},
+    {n:'远古计量展区', sub:'旧石器时代身体计量', isStop:false},
+    {n:'日晷', sub:'五楼A区', isStop:true, id:0},
+    {n:'圭表', sub:'五楼A区', isStop:true, id:1},
+    {n:'漏刻', sub:'五楼B区', isStop:true, id:2},
+    {n:'指南车', sub:'五楼C区', isStop:true, id:3},
+    {n:'记里鼓车', sub:'五楼C区', isStop:true, id:5},
+    {n:'秦汉量器区', sub:'五楼D区·度量衡演变', isStop:false},
+    {n:'楼层衔接', sub:'沿指引牌下楼，四楼风格不同但同属博物馆', isStop:false, isAnchor:true},
+    {n:'铁质砝码', sub:'四楼D区 · 近现代计量', isStop:true, id:4},
+    {n:'近代计量机构', sub:'四楼E区', isStop:false},
+    {n:'导览结束', sub:'四楼出口，感谢参观', isStop:false}
+  ]
+};
+
+let routeMode = 'full';
+let currentTab = 'onboard';
+let prevTab = 'onboard';
+let currentFloor = 5;
+
+// ─── 核心功能逻辑 ───
+function renderTabBars() {
+  const tabsHTML = `
+    <div class="tab TAB_HOME" onclick="goTab('home')"><i class="ti ti-home"></i>首页</div>
+    <div class="tab TAB_ROUTE" onclick="goTab('route')"><i class="ti ti-route"></i>路线</div>
+    <div class="tab TAB_SCAN" onclick="goTab('scan')"><div style="background:var(--gold);color:#1c1710;border-radius:50%;padding:6px;margin-top:-16px;border:2px solid var(--bg);box-shadow:0 2px 8px rgba(0,0,0,0.1);"><i class="ti ti-nfc" style="font-size:24px"></i></div>碰一碰</div>
+    <div class="tab TAB_MAP" onclick="goTab('map')"><i class="ti ti-map-2"></i>地图</div>
+  `;
+  ['main','route','map'].forEach(prefix => { let el = document.getElementById(prefix+'-tabbar'); if(el) el.innerHTML = tabsHTML; });
+  const scanTabHTML = tabsHTML.replace(/var\(--muted\)/g, 'rgba(255,255,255,0.4)').replace(/var\(--gold\)/g, '#c49a45').replace(/var\(--bg\)/g, '#1c1710').replace(/var\(--border2\)/g, '#333');
+  document.getElementById('scan-tabbar').innerHTML = scanTabHTML;
+}
+
+// ★ 时间与进度计算 ★
+function updateProgress() {
+  const data = ROUTES[routeMode];
+  const totalStops = data.filter(s => s.isStop).length;
+  const visitedStops = data.filter(s => s.isStop && EXHIBITS.find(x => x.id === s.id)?.visited).length;
+  
+  // 动态时间预估计算
+  const totalTime = routeMode === 'rec' ? 15 : 45;
+  const timePerStop = totalTime / totalStops;
+  const remainingTime = Math.ceil((totalStops - visitedStops) * timePerStop);
+  
+  const text = `${visitedStops} / ${totalStops}`;
+  const pct = `${(visitedStops / totalStops) * 100}%`;
+  
+  // 生成预估时间的 UI (加入对号图标)
+  let timeBadgeHTML = '';
+  if (remainingTime > 0) {
+    timeBadgeHTML = `<i class="ti ti-clock"></i> 预计还需 ${remainingTime} 分钟`;
+  } else {
+    timeBadgeHTML = `<i class="ti ti-check"></i> 游览已完成`;
+  }
+  
+  ['home', 'route'].forEach(page => {
+    const pText = document.getElementById(`prog-text-${page}`);
+    const pFill = document.getElementById(`prog-fill-${page}`);
+    const pTime = document.getElementById(`prog-time-${page}`);
+    
+    if(pText) pText.textContent = text;
+    if(pFill) pFill.style.width = pct;
+    if(pTime) {
+      pTime.innerHTML = timeBadgeHTML;
+      // 游览完成后改变颜色
+      if (remainingTime <= 0) {
+        pTime.style.color = 'var(--green)';
+        pTime.style.background = '#e8f5e9';
+      } else {
+        pTime.style.color = 'var(--gold)';
+        pTime.style.background = 'rgba(154,111,42,0.1)';
+      }
+    }
+  });
+}
+
+function selectRouteMode(mode) {
+  routeMode = mode;
+  document.getElementById('card-rec').className = 'ob-card ' + (mode==='rec'?'active':'');
+  document.getElementById('card-full').className = 'ob-card ' + (mode==='full'?'active':'');
+}
+
+function startTour() { 
+  renderTabBars(); 
+  goTab('home'); 
+}
+
+function goTab(tab) {
+  if(tab === 'onboard') { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('s-onboard').classList.add('active'); return; }
+  prevTab = currentTab; currentTab = tab;
+  
+  updateProgress();
+  
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('s-'+tab).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.TAB_'+tab.toUpperCase()).forEach(t => {
+    t.classList.add('active');
+    if(tab==='scan' && t.querySelector('div')) { t.querySelector('div').style.background = '#e8c97a'; } 
+    else { document.querySelectorAll('.TAB_SCAN div').forEach(btn => btn.style.background = 'var(--bg2)'); }
+  });
+  
+  if (tab === 'home') { renderHomeExhibits(currentFloor); renderMiniMap(currentFloor); }
+  if (tab === 'route') { renderRouteTimeline(); } 
+  if (tab === 'map') { mapFloor(currentFloor); }
+}
+
+function goBack() { 
+  goTab(prevTab === 'detail' ? 'home' : prevTab); 
+}
+
+function viewOnMap(id) {
+  const e = EXHIBITS.find(x => x.id === id); if(!e) return;
+  goTab('map'); mapFloor(e.floor);
+  let targetId = id; if (id === 1) targetId = 0; 
+  setTimeout(() => {
+    const dot = document.getElementById('map-dot-' + targetId); const text = document.getElementById('map-text-' + targetId);
+    if(dot && text) {
+      dot.setAttribute('fill', 'var(--red)'); text.setAttribute('fill', 'var(--red)'); text.style.fontWeight = '800';
+      const cx = dot.getAttribute('cx'); const cy = dot.getAttribute('cy');
+      const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      ring.setAttribute("cx", cx); ring.setAttribute("cy", cy); ring.setAttribute("r", "8");
+      ring.setAttribute("fill", "none"); ring.setAttribute("stroke", "var(--red)"); ring.setAttribute("stroke-width", "3");
+      ring.innerHTML = '<animate attributeName="r" values="8;24" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="1.5s" repeatCount="indefinite"/>';
+      dot.parentNode.insertBefore(ring, dot);
+    }
+  }, 50);
+}
+
+// ─── SVG 地图 ───
+function renderMiniMap(floor) {
+  const svg = document.getElementById('mini-map-svg');
+  if (floor === 5) {
+    // 五楼：参照纸质地图 - 不规则多边形，入口在右侧，路线右→左
+    svg.innerHTML = `<rect width="348" height="150" fill="#f0e8d0"/>
+      <polygon points="
+        318,12  318,58  298,58  298,78  258,78  258,98
+        178,98  178,118  98,118  78,118  58,98  18,98
+        18,58   58,58   78,38   178,38  178,18  318,18
+      " fill="#e0c898" stroke="#a08050" stroke-width="1.2"/>
+      <!-- 展区分隔线 -->
+      <line x1="178" y1="18" x2="178" y2="98" stroke="#b89060" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <line x1="258" y1="38" x2="258" y2="98" stroke="#b89060" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <!-- 路线虚线 右→左 -->
+      <polyline points="305,38 275,68 225,68 175,68 135,78 95,98 70,108 42,98"
+        fill="none" stroke="#8b6020" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <!-- 入口（右侧）-->
+      <rect x="304" y="28" width="28" height="16" rx="3" fill="#8b2020" opacity="0.85"/>
+      <text x="318" y="40" text-anchor="middle" font-size="8" fill="#fff">入口</text>
+      <!-- 展品点 ①日晷 ②圭表 ③漏刻 ④指南车 ⑤记里鼓车 -->
+      <circle id="mm-dot-0" cx="268" cy="58" r="6" fill="#1a6b6b"/>
+      <text x="268" y="50" text-anchor="middle" font-size="7" fill="#1a6b6b">①日晷</text>
+      <circle id="mm-dot-1" cx="222" cy="68" r="6" fill="#1a6b6b"/>
+      <text x="222" y="60" text-anchor="middle" font-size="7" fill="#1a6b6b">②圭表</text>
+      <circle id="mm-dot-2" cx="160" cy="68" r="6" fill="#1a6b6b"/>
+      <text x="160" y="60" text-anchor="middle" font-size="7" fill="#1a6b6b">③漏刻</text>
+      <circle id="mm-dot-3" cx="102" cy="92" r="6" fill="#1a6b6b"/>
+      <text x="102" y="84" text-anchor="middle" font-size="7" fill="#1a6b6b">④指南</text>
+      <circle id="mm-dot-5" cx="52" cy="100" r="6" fill="#1a6b6b"/>
+      <text x="52" y="92" text-anchor="middle" font-size="7" fill="#1a6b6b">⑤记里</text>
+      <!-- 下楼标记 -->
+      <text x="22" y="116" font-size="7" fill="#8b2020">↓四楼</text>
+      <!-- 指北针 -->
+      <text x="8" y="14" font-size="8" fill="#a08050">N↑</text>`;
+  } else {
+    // 四楼：参照纸质图1 - 蓝色，竖向中轴，上方入口，5个展品，底部圆弧
+    svg.innerHTML = `<rect width="348" height="150" fill="#dceef8"/>
+      <polygon points="
+        148,8  200,8  200,28  228,28  228,88
+        268,88  268,108  228,108  228,128
+        188,128  188,118  148,118  148,128
+        108,128  108,108  68,108   68,88
+        108,88   108,28  148,28
+      " fill="#b8d8ee" stroke="#6090b8" stroke-width="1.2"/>
+      <!-- 圆弧展区（底部） -->
+      <path d="M108,118 Q174,148 188,118" fill="#a8cce0" stroke="#6090b8" stroke-width="1"/>
+      <!-- 中轴路线 上→下 -->
+      <polyline points="174,14 174,38 174,58 174,78 174,98 174,118"
+        fill="none" stroke="#1c4a70" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <!-- 入口（顶部）-->
+      <rect x="158" y="4" width="30" height="14" rx="3" fill="#8b2020" opacity="0.85"/>
+      <text x="173" y="14" text-anchor="middle" font-size="7.5" fill="#fff">从五楼</text>
+      <!-- 展品点 -->
+      <circle id="mm-dot-4a" cx="174" cy="38" r="6" fill="#1a6b6b"/>
+      <text x="174" y="30" text-anchor="middle" font-size="7" fill="#0a5060">①展品</text>
+      <circle id="mm-dot-4b" cx="174" cy="60" r="6" fill="#1a6b6b"/>
+      <text x="174" y="52" text-anchor="middle" font-size="7" fill="#0a5060">②展品</text>
+      <circle id="mm-dot-4c" cx="174" cy="80" r="6" fill="#1a6b6b"/>
+      <text x="174" y="72" text-anchor="middle" font-size="7" fill="#0a5060">③展品</text>
+      <circle id="mm-dot-4d" cx="174" cy="100" r="6" fill="#1a6b6b"/>
+      <text x="174" y="92" text-anchor="middle" font-size="7" fill="#0a5060">④铁砝码</text>
+      <circle id="mm-dot-4e" cx="174" cy="120" r="6" fill="#1a6b6b"/>
+      <text x="174" y="112" text-anchor="middle" font-size="7" fill="#0a5060">⑤展品</text>
+      <!-- 指北针 -->
+      <text x="8" y="14" font-size="8" fill="#6090b8">N↑</text>`;
+  }
+}
+function renderBigMap(floor) {
+  const svg = document.getElementById('map-big-svg');
+  if (floor === 5) {
+    // 五楼大图：参照纸质图2，不规则多边形，右侧入口，从右→左5个展品
+    svg.innerHTML = `<rect width="348" height="280" fill="#f0e8d0"/>
+      <!-- 主体墙轮廓 -->
+      <polygon points="
+        330,18  330,108  300,108  300,148  240,148  240,178
+        160,178  160,218  80,218   52,218   28,188   28,118
+        52,118   76,88    160,88   160,48   240,48   240,28
+      " fill="#e2cfa0" stroke="#a08050" stroke-width="1.5"/>
+      <!-- 展区内分隔 -->
+      <line x1="240" y1="48" x2="240" y2="178" stroke="#c0a070" stroke-width="0.8" stroke-dasharray="4,4"/>
+      <line x1="160" y1="88" x2="160" y2="178" stroke="#c0a070" stroke-width="0.8" stroke-dasharray="4,4"/>
+      <!-- 展区标签 -->
+      <text x="285" y="75" text-anchor="middle" font-size="9" fill="#8a6030">古代</text>
+      <text x="285" y="87" text-anchor="middle" font-size="9" fill="#8a6030">计量区</text>
+      <text x="200" y="115" text-anchor="middle" font-size="9" fill="#8a6030">度量衡</text>
+      <text x="200" y="127" text-anchor="middle" font-size="9" fill="#8a6030">展区</text>
+      <text x="115" y="145" text-anchor="middle" font-size="9" fill="#8a6030">机械</text>
+      <text x="115" y="157" text-anchor="middle" font-size="9" fill="#8a6030">仪器区</text>
+      <text x="55" y="175" text-anchor="middle" font-size="9" fill="#8a6030">序厅</text>
+      <!-- 路线虚线 -->
+      <polyline points="316,58 280,98 245,118 200,128 160,148 118,168 78,188 52,200"
+        fill="none" stroke="#9a6f2a" stroke-width="2" stroke-dasharray="6,4"/>
+      <!-- 入口 -->
+      <rect x="310" y="22" width="36" height="22" rx="4" fill="#8b2020" opacity="0.9"/>
+      <text x="328" y="37" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">入口</text>
+      <!-- 出口/下楼 -->
+      <rect x="24" y="200" width="36" height="22" rx="4" fill="#1a6b6b" opacity="0.9"/>
+      <text x="42" y="215" text-anchor="middle" font-size="8" fill="#fff">↓四楼</text>
+      <!-- ① 日晷 -->
+      <circle id="map-dot-0" cx="276" cy="100" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-0" x="276" y="104" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">①</text>
+      <text x="276" y="120" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">日晷</text>
+      <!-- ② 圭表 -->
+      <circle id="map-dot-1" cx="240" cy="122" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-1" x="240" y="126" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">②</text>
+      <text x="258" y="130" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">圭表</text>
+      <!-- ③ 漏刻 -->
+      <circle id="map-dot-2" cx="196" cy="132" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-2" x="196" y="136" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">③</text>
+      <text x="196" y="152" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">漏刻</text>
+      <!-- ④ 指南车 -->
+      <circle id="map-dot-3" cx="152" cy="152" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-3" x="152" y="156" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">④</text>
+      <text x="135" y="165" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">指南车</text>
+      <!-- ⑤ 记里鼓车 -->
+      <circle id="map-dot-5" cx="110" cy="172" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-5" x="110" y="176" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">⑤</text>
+      <text x="90" y="190" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">记里鼓车</text>
+      <!-- 指北针 -->
+      <circle cx="28" cy="40" r="14" fill="rgba(255,255,255,0.7)" stroke="#a08050" stroke-width="1"/>
+      <polygon points="28,28 24,44 28,40 32,44" fill="#8b2020"/>
+      <polygon points="28,52 24,40 28,44 32,40" fill="#a08050"/>
+      <text x="28" y="25" text-anchor="middle" font-size="8" fill="#8b2020" font-weight="bold">N</text>
+      <!-- 图例 -->
+      <rect x="240" y="234" width="100" height="40" rx="4" fill="rgba(255,255,255,0.8)" stroke="#c0a070" stroke-width="0.8"/>
+      <circle cx="252" cy="246" r="5" fill="#1a6b6b"/>
+      <text x="262" y="250" font-size="8" fill="#4a3020">重点展品</text>
+      <rect x="246" y="256" width="12" height="8" rx="2" fill="#8b2020" opacity="0.8"/>
+      <text x="262" y="263" font-size="8" fill="#4a3020">入口/出口</text>`;
+  } else {
+    // 四楼大图：参照纸质图1，蓝色，竖向，上方入口，圆弧结构，5个展品
+    svg.innerHTML = `<rect width="348" height="280" fill="#dceef8"/>
+      <!-- 主体平面 中央竖向走廊 -->
+      <polygon points="
+        148,16  200,16  200,46  238,46  238,126
+        278,126  278,166  238,166  238,196
+        198,196  198,226  178,246  158,226  158,196
+        118,196  118,166  78,166   78,126
+        118,126  118,46  148,46
+      " fill="#b0d0e8" stroke="#5a88b0" stroke-width="1.5"/>
+      <!-- 计量与产业展区（中部圆弧扩展） -->
+      <path d="M118,196 Q174,240 198,196" fill="#98c0dc" stroke="#5a88b0" stroke-width="1"/>
+      <!-- 内部走廊线 -->
+      <line x1="148" y1="46" x2="148" y2="196" stroke="#7aaac8" stroke-width="0.8" stroke-dasharray="4,4"/>
+      <line x1="200" y1="46" x2="200" y2="196" stroke="#7aaac8" stroke-width="0.8" stroke-dasharray="4,4"/>
+      <!-- 左右侧展室标签 -->
+      <text x="95" y="95" text-anchor="middle" font-size="8" fill="#3a6888">毕业生</text>
+      <text x="95" y="106" text-anchor="middle" font-size="8" fill="#3a6888">展廊</text>
+      <text x="255" y="95" text-anchor="middle" font-size="8" fill="#3a6888">十K生</text>
+      <text x="255" y="106" text-anchor="middle" font-size="8" fill="#3a6888">展廊</text>
+      <text x="174" y="218" text-anchor="middle" font-size="8" fill="#3a6888">计量与产业</text>
+      <!-- 路线虚线 上→下 -->
+      <polyline points="174,22 174,55 174,90 174,125 174,160 174,196"
+        fill="none" stroke="#1c4a70" stroke-width="2" stroke-dasharray="6,4"/>
+      <!-- 上方入口（从五楼下来） -->
+      <rect x="152" y="8" width="44" height="20" rx="4" fill="#8b2020" opacity="0.9"/>
+      <text x="174" y="22" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="bold">从五楼↓</text>
+      <!-- 下方出口 -->
+      <rect x="155" y="250" width="38" height="18" rx="4" fill="#1a6b6b" opacity="0.9"/>
+      <text x="174" y="263" text-anchor="middle" font-size="8" fill="#fff">出口</text>
+      <!-- ① 展品 (对应纸质图①位置) -->
+      <circle cx="174" cy="56" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text x="174" y="60" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">①</text>
+      <text x="220" y="60" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">中国计量</text>
+      <text x="220" y="72" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">成就展</text>
+      <!-- ② 展品 -->
+      <circle cx="174" cy="90" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text x="174" y="94" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">②</text>
+      <text x="220" y="94" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">近代仪器</text>
+      <!-- ③ 展品 -->
+      <circle cx="174" cy="124" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text x="174" y="128" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">③</text>
+      <text x="220" y="128" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">国际计量</text>
+      <!-- ④ 铁砝码 -->
+      <circle id="map-dot-4" cx="174" cy="158" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text id="map-text-4" x="174" y="162" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">④</text>
+      <text x="128" y="165" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">铁质砝码</text>
+      <!-- ⑤ 展品 -->
+      <circle cx="174" cy="192" r="10" fill="#1a6b6b" stroke="#fff" stroke-width="1.5"/>
+      <text x="174" y="196" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">⑤</text>
+      <text x="220" y="196" text-anchor="middle" font-size="9" fill="#1c1710" font-weight="600">计量与产业</text>
+      <!-- 指北针 -->
+      <circle cx="28" cy="40" r="14" fill="rgba(255,255,255,0.7)" stroke="#5a88b0" stroke-width="1"/>
+      <polygon points="28,28 24,44 28,40 32,44" fill="#8b2020"/>
+      <polygon points="28,52 24,40 28,44 32,40" fill="#5a88b0"/>
+      <text x="28" y="25" text-anchor="middle" font-size="8" fill="#8b2020" font-weight="bold">N</text>
+      <!-- 图例 -->
+      <rect x="238" y="234" width="104" height="40" rx="4" fill="rgba(255,255,255,0.8)" stroke="#7aaac8" stroke-width="0.8"/>
+      <circle cx="250" cy="246" r="5" fill="#1a6b6b"/>
+      <text x="260" y="250" font-size="8" fill="#2a4060">展品位置</text>
+      <rect x="244" y="256" width="12" height="8" rx="2" fill="#8b2020" opacity="0.8"/>
+      <text x="260" y="263" font-size="8" fill="#2a4060">入口/出口</text>`;
+  }
+}
+
+function switchFloor(f) { currentFloor = f; document.getElementById('fp-5').className = 'floor-pill ' + (f===5?'active':''); document.getElementById('fp-4').className = 'floor-pill ' + (f===4?'active':''); document.getElementById('anchor-text').textContent = f===5 ? '当前位置：五楼序厅入口' : '当前位置：四楼近现代入口'; renderHomeExhibits(f); renderMiniMap(f); }
+
+function mapFloor(f) { 
+  currentFloor = f; 
+  document.getElementById('map-btn-5').style.background = f===5?'var(--gold)':'transparent'; 
+  document.getElementById('map-btn-5').style.color = f===5?'#1c1710':'var(--muted)'; 
+  document.getElementById('map-btn-4').style.background = f===4?'var(--gold)':'transparent'; 
+  document.getElementById('map-btn-4').style.color = f===4?'#1c1710':'var(--muted)'; 
+  
+  const alertEl = document.getElementById('map-transition-alert');
+  if(alertEl) { alertEl.style.display = f===4 ? 'flex' : 'none'; }
+  
+  renderBigMap(f); 
+}
+
+function renderHomeExhibits(floor) {
+  const shows = EXHIBITS.filter(e => e.floor === floor && e.key);
+  document.getElementById('home-exhibits').innerHTML = shows.map(e => `<div class="ex-row" onclick="showDetail(${e.id})"><div class="ex-thumb"><img src="${e.img}"></div><div style="flex:1"><div class="ex-name">${e.name} ${e.visited ? '<i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i>' : ''}</div><div class="ex-meta">${e.loc}</div></div><i class="ti ti-chevron-right" style="color:var(--border2);font-size:20px"></i></div>`).join('');
+}
+function renderRouteTimeline() {
+  const data = ROUTES[routeMode];
+  document.getElementById('route-desc').textContent = routeMode==='rec' ? '当前模式：精华推荐路线' : '当前模式：全馆完整路线';
+  document.getElementById('route-timeline').innerHTML = data.map((s, i) => {
+    const isClickable = s.isStop && s.id !== undefined; const isVisited = isClickable && EXHIBITS.find(x => x.id === s.id).visited;
+    // 楼层衔接锚点卡单独渲染
+    if (s.isAnchor) {
+      return `<div class="tl-item">
+        <div class="tl-spine">
+          <div class="tl-dot" style="background:#8b2020;border-color:#8b2020;color:#fff;font-size:12px"><i class="ti ti-stairs-down" style="font-size:13px"></i></div>
+          ${i < data.length-1 ? '<div class="tl-line" style="background:rgba(139,32,32,0.4)"></div>' : ''}
+        </div>
+        <div class="tl-content" style="padding-bottom:18px">
+          <div style="background:rgba(139,32,32,0.08);border:1px solid rgba(139,32,32,0.3);border-radius:10px;padding:10px 12px;margin-top:2px">
+            <div style="font-size:13px;font-weight:600;color:#8b2020;display:flex;align-items:center;gap:6px"><i class="ti ti-map-pin" style="font-size:14px"></i>📍 空间锚点：楼层衔接处</div>
+            <div style="font-size:12px;color:var(--ink2);margin-top:6px;line-height:1.65">${s.sub}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;padding-top:6px;border-top:0.5px dashed rgba(139,32,32,0.2)">💡 四楼风格与五楼不同是正常现象，这是博物馆的近现代计量展区，请放心继续参观。</div>
+          </div>
+        </div>
+      </div>`;
+    }
+    let dotStyle = ''; let dotIcon = s.isStop ? `<i class="ti ti-star" style="font-size:12px"></i>` : `<i class="ti ti-point" style="font-size:16px"></i>`;
+    if(isVisited) { dotStyle = 'visited'; dotIcon = `<i class="ti ti-check" style="font-size:14px"></i>`; } else if(!s.isStop) { dotStyle = 'background:transparent;border-color:var(--border2);color:var(--muted)'; }
+    return `<div class="tl-item" ${isClickable ? `onclick="showDetail(${s.id})" style="cursor:pointer"` : ''}><div class="tl-spine"><div class="tl-dot ${dotStyle}" style="${dotStyle.includes('transparent') ? dotStyle : ''}">${dotIcon}</div>${i < data.length-1 ? '<div class="tl-line"></div>' : ''}</div><div class="tl-content" style="${!s.isStop ? 'opacity:0.7' : ''}"><div class="tl-name" style="display:flex;align-items:center;gap:6px">${s.n} ${isClickable ? '<i class="ti ti-chevron-right" style="color:var(--border2)"></i>' : ''}</div><div style="font-size:12px;color:var(--muted)">${s.sub || ''}</div></div></div>`
+  }).join('');
+}
+
+function highlightTerms(text, terms) {
+  if (!terms || terms.length === 0) return text; let result = text;
+  terms.forEach(term => { const jsonStr = encodeURIComponent(JSON.stringify(term)); const regex = new RegExp(term.t, 'g'); result = result.replace(regex, `<span class="term-link" onclick="openTermModal('${jsonStr}')">${term.t}</span>`); });
+  return result;
+}
+function openTermModal(termDataStr) {
+  const term = JSON.parse(decodeURIComponent(termDataStr));
+  document.getElementById('bs-term-title').innerHTML = `${term.t} <span class="bs-py">${term.py}</span>`;
+  document.getElementById('bs-term-desc').textContent = term.d;
+  document.getElementById('term-overlay').classList.add('show'); document.getElementById('term-sheet').classList.add('show');
+}
+function closeTermModal() { document.getElementById('term-overlay').classList.remove('show'); document.getElementById('term-sheet').classList.remove('show'); }
+function toggleTextExpand() {
+  const container = document.getElementById('desc-container'); const btn = document.getElementById('expand-btn');
+  if(container.classList.contains('expanded')) { container.classList.remove('expanded'); btn.innerHTML = '展开完整介绍 <i class="ti ti-chevron-down"></i>'; } 
+  else { container.classList.add('expanded'); btn.innerHTML = '收起 <i class="ti ti-chevron-up"></i>'; }
+}
+
+function getAnimSVG(type) {
+  const W = 320, H = 160;
+  const anims = {
+
+    // ── 日晷：晷盘 + 12时辰刻度 + 转动影子 + 步骤说明 ──
+    sundial: `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" rx="8" fill="#1c1710"/>
+      <!-- 晷盘底座 -->
+      <ellipse cx="160" cy="115" rx="90" ry="28" fill="#3a2a10" stroke="#c49a45" stroke-width="1.5"/>
+      <ellipse cx="160" cy="112" rx="86" ry="25" fill="#2a1c08"/>
+      <!-- 12时辰刻度 -->
+      ${[0,1,2,3,4,5,6,7,8,9,10,11].map(i=>{
+        const a=(i*30-90)*Math.PI/180, r1=68, r2=80, rt=56;
+        const labels=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+        return `<line x1="${(160+r1*Math.cos(a)).toFixed(1)}" y1="${(112+r1*Math.sin(a)*0.29).toFixed(1)}" x2="${(160+r2*Math.cos(a)).toFixed(1)}" y2="${(112+r2*Math.sin(a)*0.29).toFixed(1)}" stroke="#8a6820" stroke-width="1.2"/>
+        <text x="${(160+rt*Math.cos(a)).toFixed(1)}" y="${(112+rt*Math.sin(a)*0.29+4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#c49a45">${labels[i]}</text>`;
+      }).join('')}
+      <!-- 晷针 -->
+      <line x1="160" y1="112" x2="160" y2="32" stroke="#e8c060" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="160,28 156,38 164,38" fill="#e8c060"/>
+      <text x="160" y="22" text-anchor="middle" font-size="8" fill="#e8c060">↑ 北极星方向</text>
+      <!-- 旋转影子 -->
+      <g>
+        <line x1="160" y1="112" x2="230" y2="88" stroke="rgba(200,160,40,0.55)" stroke-width="5" stroke-linecap="round"/>
+        <animateTransform attributeName="transform" type="rotate" from="-150 160 112" to="210 160 112" dur="8s" repeatCount="indefinite"/>
+      </g>
+      <!-- 说明 -->
+      <text x="160" y="148" text-anchor="middle" font-size="10" fill="#8a7060">地球自转 → 影子转动 → 读出时辰</text>
+    </svg>`,
+
+    // ── 圭表：表竿 + 日光线 + 动态影长 + 夏至/冬至标注 ──
+    gnomon: `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" rx="8" fill="#1c1710"/>
+      <!-- 圭（水平刻度尺） -->
+      <rect x="36" y="118" width="248" height="5" rx="2" fill="#c49a45"/>
+      ${Array.from({length:12},(_,i)=>`<line x1="${56+i*18}" y1="118" x2="${56+i*18}" y2="112" stroke="#8a6820" stroke-width="1"/>
+      <text x="${56+i*18}" y="109" text-anchor="middle" font-size="7.5" fill="#8a6820">${i+1}</text>`).join('')}
+      <text x="36" y="135" font-size="9" fill="#8a7060">圭（刻度尺）</text>
+      <!-- 表竿 -->
+      <rect x="56" y="40" width="5" height="78" rx="1.5" fill="#e8c060"/>
+      <text x="59" y="34" text-anchor="middle" font-size="9" fill="#e8c060">表</text>
+      <!-- 太阳（可动） -->
+      <circle id="sun-g" cx="260" cy="50" r="12" fill="#f0c020" opacity="0.9"/>
+      <text x="260" y="38" text-anchor="middle" font-size="8" fill="#f0c020">太阳</text>
+      <!-- 光线 -->
+      <line id="ray-g" x1="248" y1="56" x2="61" y2="118" stroke="#f0c020" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+      <!-- 动态影子 -->
+      <rect id="shadow-g" x="61" y="117" height="4" rx="1.5" fill="#8a6820" opacity="0.8">
+        <animate attributeName="width" values="20;100;20" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1"/>
+      </rect>
+      <!-- 标注 -->
+      <text x="64" y="107" font-size="8" fill="#5dcaa5">夏至↑最短</text>
+      <text x="120" y="107" font-size="8" fill="#e8c060">冬至↑最长</text>
+      <text x="160" y="148" text-anchor="middle" font-size="10" fill="#8a7060">每日正午测影长 → 最短=夏至，最长=冬至 → 推算历法</text>
+    </svg>`,
+
+    // ── 漏刻：三级补偿壶 + 水流动画 + 刻箭上升 ──
+    clepsydra: `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" rx="8" fill="#1c1710"/>
+      <!-- 壶1（补偿壶A） -->
+      <rect x="28" y="22" width="40" height="52" rx="4" fill="#1a4a5a" stroke="#2a9494" stroke-width="1"/>
+      <rect x="30" y="24" width="36" height="32" rx="2" fill="#1d6b7a" opacity="0.8"/>
+      <text x="48" y="52" text-anchor="middle" font-size="9" fill="#5dc4c4">补偿</text>
+      <text x="48" y="63" text-anchor="middle" font-size="9" fill="#5dc4c4">壶 A</text>
+      <!-- 壶1出水 -->
+      <g><line x1="48" y1="74" x2="48" y2="88" stroke="#5dc4c4" stroke-width="2" stroke-dasharray="3,3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="0.8s" repeatCount="indefinite"/>
+      </line></g>
+      <!-- 壶2（补偿壶B） -->
+      <rect x="108" y="40" width="40" height="52" rx="4" fill="#1a4a5a" stroke="#2a9494" stroke-width="1"/>
+      <rect x="110" y="42" width="36" height="28" rx="2" fill="#1d6b7a" opacity="0.8"/>
+      <text x="128" y="68" text-anchor="middle" font-size="9" fill="#5dc4c4">补偿</text>
+      <text x="128" y="79" text-anchor="middle" font-size="9" fill="#5dc4c4">壶 B</text>
+      <line x1="68" y1="86" x2="108" y2="78" stroke="#2a9494" stroke-width="1" stroke-dasharray="3,3"/>
+      <!-- 壶2出水 -->
+      <g><line x1="128" y1="92" x2="128" y2="106" stroke="#5dc4c4" stroke-width="2" stroke-dasharray="3,3">
+        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="0.8s" repeatCount="indefinite"/>
+      </line></g>
+      <!-- 受水壶 -->
+      <rect x="188" y="58" width="52" height="78" rx="4" fill="#0f3040" stroke="#2a9494" stroke-width="1.5"/>
+      <!-- 水位动画 -->
+      <clipPath id="cwc"><rect x="190" y="60" width="48" height="74" rx="2"/></clipPath>
+      <rect x="190" y="60" width="48" height="74" rx="2" fill="#0f3040"/>
+      <rect x="190" y="100" width="48" height="34" fill="#1d6b7a" opacity="0.7" clip-path="url(#cwc)">
+        <animate attributeName="y" values="134;100;134" dur="5s" repeatCount="indefinite"/>
+        <animate attributeName="height" values="0;34;0" dur="5s" repeatCount="indefinite"/>
+      </rect>
+      <line x1="148" y1="102" x2="188" y2="96" stroke="#2a9494" stroke-width="1" stroke-dasharray="3,3"/>
+      <!-- 刻箭 -->
+      <rect x="218" y="62" width="3" height="72" rx="1" fill="#c49a45" opacity="0.6"/>
+      ${Array.from({length:5},(_,i)=>`<line x1="221" y1="${66+i*13}" x2="227" y2="${66+i*13}" stroke="#c49a45" stroke-width="1"/>
+      <text x="230" y="${69+i*13}" font-size="7.5" fill="#c49a45">${i+1}刻</text>`).join('')}
+      <!-- 浮标上升 -->
+      <rect x="211" y="106" width="10" height="4" rx="1" fill="#e8c060">
+        <animate attributeName="y" values="128;106;128" dur="5s" repeatCount="indefinite"/>
+      </rect>
+      <!-- 标注 -->
+      <text x="28" y="15" font-size="8.5" fill="#8a7060">多级补偿壶 → 保持恒定出水速度 → 刻箭匀速上升 → 读出时刻</text>
+      <text x="160" y="152" text-anchor="middle" font-size="9" fill="#5dc4c4">三壶串联：水压恒定，如同电路稳压器</text>
+    </svg>`,
+
+    // ── 指南车：差动齿轮 + 转弯补偿 + 木人始终朝南 ──
+    carriage: `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" rx="8" fill="#1c1710"/>
+      <!-- 车体 -->
+      <rect x="90" y="50" width="140" height="72" rx="8" fill="#3a2a10" stroke="#c49a45" stroke-width="1.5"/>
+      <!-- 左轮 -->
+      <circle cx="100" cy="126" r="18" fill="none" stroke="#8a6820" stroke-width="2.5" stroke-dasharray="8,4">
+        <animateTransform attributeName="transform" type="rotate" from="0 100 126" to="360 100 126" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="100" cy="126" r="4" fill="#c49a45"/>
+      <!-- 右轮（加速模拟转弯） -->
+      <circle cx="220" cy="126" r="18" fill="none" stroke="#8a6820" stroke-width="2.5" stroke-dasharray="8,4">
+        <animateTransform attributeName="transform" type="rotate" from="0 220 126" to="720 220 126" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="220" cy="126" r="4" fill="#c49a45"/>
+      <!-- 差动齿轮组（中央） -->
+      <circle cx="160" cy="88" r="16" fill="#5a3a18" stroke="#c49a45" stroke-width="1">
+        <animateTransform attributeName="transform" type="rotate" from="0 160 88" to="-360 160 88" dur="6s" repeatCount="indefinite"/>
+      </circle>
+      <text x="160" y="92" text-anchor="middle" font-size="8" fill="#e8c060">差动</text>
+      <!-- 齿轮连杆示意 -->
+      <line x1="118" y1="110" x2="144" y2="94" stroke="#8a6820" stroke-width="1.5"/>
+      <line x1="202" y1="110" x2="176" y2="94" stroke="#8a6820" stroke-width="1.5"/>
+      <!-- 木人 + 指针（始终朝南） -->
+      <circle cx="160" cy="60" r="10" fill="#c49a45"/>
+      <line x1="160" y1="50" x2="160" y2="36" stroke="#8b2020" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="160,30 155,40 165,40" fill="#8b2020"/>
+      <text x="160" y="26" text-anchor="middle" font-size="10" fill="#8b2020" font-weight="bold">南</text>
+      <!-- 注解 -->
+      <text x="16" y="72" font-size="8" fill="#8a7060">左转时</text>
+      <text x="16" y="82" font-size="8" fill="#8a7060">右轮快</text>
+      <text x="16" y="92" font-size="8" fill="#8a7060">↓差动</text>
+      <text x="16" y="102" font-size="8" fill="#8a7060">反向补</text>
+      <text x="16" y="112" font-size="8" fill="#8a7060">偿旋转</text>
+      <text x="160" y="152" text-anchor="middle" font-size="10" fill="#c49a45">左右轮速差 → 差动齿轮反向补偿 → 木人始终指南</text>
+    </svg>`,
+
+    // ── 记里鼓车：车轮→减速齿轮串联→击鼓 ──
+    odograph: `<svg width="320" height="160" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="160" rx="8" fill="#1c1710"/>
+      <!-- 车轮（快转） -->
+      <circle cx="48" cy="108" r="28" fill="none" stroke="#8a6820" stroke-width="2.5" stroke-dasharray="10,5">
+        <animateTransform attributeName="transform" type="rotate" from="0 48 108" to="360 48 108" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="48" cy="108" r="5" fill="#c49a45"/>
+      <text x="48" y="148" text-anchor="middle" font-size="9" fill="#8a7060">车轮</text>
+      <!-- 齿轮 G1（小，快） -->
+      <circle cx="106" cy="96" r="12" fill="#5a3a18" stroke="#c49a45" stroke-width="1.2">
+        <animateTransform attributeName="transform" type="rotate" from="0 106 96" to="360 106 96" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="106" y="99" text-anchor="middle" font-size="7" fill="#e8c060">G1</text>
+      <!-- 连轴 -->
+      <line x1="76" y1="100" x2="94" y2="97" stroke="#8a6820" stroke-width="2"/>
+      <!-- 齿轮 G2（中） -->
+      <circle cx="150" cy="90" r="20" fill="#4a3010" stroke="#c49a45" stroke-width="1.2">
+        <animateTransform attributeName="transform" type="rotate" from="360 150 90" to="0 150 90" dur="5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="150" y="94" text-anchor="middle" font-size="7" fill="#e8c060">G2</text>
+      <line x1="118" y1="94" x2="130" y2="91" stroke="#8a6820" stroke-width="2"/>
+      <!-- 齿轮 G3（大，慢） -->
+      <circle cx="210" cy="85" r="30" fill="#3a2808" stroke="#c49a45" stroke-width="1.5">
+        <animateTransform attributeName="transform" type="rotate" from="0 210 85" to="360 210 85" dur="18s" repeatCount="indefinite"/>
+      </circle>
+      <text x="210" y="89" text-anchor="middle" font-size="7" fill="#e8c060">G3</text>
+      <line x1="170" y1="89" x2="180" y2="87" stroke="#8a6820" stroke-width="2"/>
+      <!-- 击锤 -->
+      <line x1="240" y1="64" x2="258" y2="48" stroke="#c49a45" stroke-width="2.5" stroke-linecap="round">
+        <animateTransform attributeName="transform" type="rotate" from="-8 240 64" to="8 240 64" dur="18s" repeatCount="indefinite" calcMode="discrete" keyTimes="0;0.94;0.95;1" values="-8 240 64;-8 240 64;8 240 64;-8 240 64"/>
+      </line>
+      <!-- 鼓 -->
+      <ellipse cx="270" cy="42" rx="14" ry="10" fill="#8b2020" stroke="#c49a45" stroke-width="1"/>
+      <text x="270" y="34" text-anchor="middle" font-size="14" fill="#e8c060">🥁</text>
+      <!-- 速度标注 -->
+      <text x="48" y="72" text-anchor="middle" font-size="8" fill="#c49a45">快↑</text>
+      <text x="106" y="76" text-anchor="middle" font-size="8" fill="#c49a45">↓</text>
+      <text x="150" y="62" text-anchor="middle" font-size="8" fill="#c49a45">减速</text>
+      <text x="210" y="47" text-anchor="middle" font-size="8" fill="#c49a45">慢↓</text>
+      <text x="160" y="148" text-anchor="middle" font-size="10" fill="#c49a45">车轮快转 → 齿轮逐级减速 → 行一里击鼓一声</text>
+    </svg>`
+  };
+  return anims[type] || '';
+}
+
+function buildConverterHTML(e) {
+  let inner = '', fn = '', defaultVal = '', unit = '';
+  if (e.converter.type === 'time') {
+    defaultVal = new Date().getHours(); unit = '时'; fn = `calcTime(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" min="0" max="23" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  } else if (e.converter.type === 'shadow') {
+    defaultVal = 170; unit = 'cm'; fn = `calcShadow(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  } else if (e.converter.type === 'clepsydra') {
+    defaultVal = 30; unit = '分钟'; fn = `calcClep(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  } else if (e.converter.type === 'distance') {
+    defaultVal = 8000; unit = '步'; fn = `calcDist(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" min="100" max="100000" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  } else if (e.converter.type === 'direction') {
+    defaultVal = 3; unit = '圈'; fn = `calcDir(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  } else if (e.converter.type === 'weight') {
+    defaultVal = 100; unit = '克'; fn = `calcWeight(${e.id})`;
+    inner = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${e.converter.label}</div><div class="conv-row"><input class="conv-inp" id="cv-${e.id}" type="number" value="${defaultVal}" oninput="${fn}"><span style="font-size:14px;color:var(--ink2)">${unit}</span></div><div class="conv-result" id="cr-${e.id}"></div>`;
+  }
+  return `<div class="dsec"><div class="dsec-title">🔄 古今换算互动</div><div class="converter-box">${inner}</div></div>`;
+}
+
+function calcTime(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value); if(isNaN(v)) v = new Date().getHours();
+  const SHICHEN = ['子 (23:00-01:00)','丑 (01:00-03:00)','寅 (03:00-05:00)','卯 (05:00-07:00)','辰 (07:00-09:00)','巳 (09:00-11:00)','午 (11:00-13:00)','未 (13:00-15:00)','申 (15:00-17:00)','酉 (17:00-19:00)','戌 (19:00-21:00)','亥 (21:00-23:00)'];
+  const names = ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'];
+  const adj = v < 1 ? v + 23 : v - 1; const idx = Math.floor(adj / 2) % 12;
+  let shadow = v < 12 ? '太阳偏东 · 晷影偏西' : v === 12 ? '正午 · 晷影最短' : '太阳偏西 · 晷影偏东';
+  if(v >= 18 || v <= 5) shadow = '夜间无阳光 · 无法观测';
+  document.getElementById('cr-'+id).innerHTML = `${v}:00 → <strong>${names[idx]}</strong>（${SHICHEN[idx].split(' ')[1]}）<br>📍 ${shadow}`;
+}
+function calcShadow(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value) || 170;
+  document.getElementById('cr-'+id).innerHTML = `身高 ${v}cm → 夏至正午在杭州的影子长度约为 <strong>${Math.round(v * 0.35)} cm</strong>。`;
+}
+function calcClep(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value) || 30;
+  document.getElementById('cr-'+id).innerHTML = `${v}分钟 ≈ <strong>${(v / 14.4).toFixed(1)} 刻</strong>（古代一昼夜分100刻，1刻约14.4分）。`;
+}
+function calcDist(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value) || 8000;
+  const km = (v * 0.7 / 1000).toFixed(2);
+  const li_han = (v * 0.7 / 415).toFixed(1);
+  const beats = Math.round(parseFloat(li_han));
+  document.getElementById('cr-'+id).innerHTML = `${v.toLocaleString()} 步 ≈ ${km} 公里<br>≈ 汉代 <strong>${li_han} 里</strong>（1里≈415m）<br>🥁 记里鼓车击鼓约 <strong>${beats}</strong> 次`;
+}
+function calcDir(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value) || 3;
+  document.getElementById('cr-'+id).innerHTML = `绕场 ${v} 圈 = 转了 ${v*360}° <br>⚙️ 差动齿轮组精确补偿了 <strong>${v}</strong> 次完整旋转，木人方位毫无偏差！`;
+}
+function calcWeight(id) {
+  let v = parseInt(document.getElementById('cv-'+id).value) || 100;
+  document.getElementById('cr-'+id).innerHTML = `${v} 克 ≈ 清代库平两 <strong>${(v / 37.3).toFixed(2)} 两</strong>。`;
+}
+
+function showDetail(id) {
+  const e = EXHIBITS.find(x => x.id === id); if(!e) return;
+  
+  document.getElementById('d-title').textContent = e.name;
+  const topAction = document.getElementById('d-mark-action');
+  if(e.visited) { 
+    topAction.innerHTML = '<i class="ti ti-check"></i> 已打卡'; 
+    topAction.className = 'topbar-action visited'; 
+    topAction.onclick = null; 
+  } else { 
+    topAction.innerHTML = '<i class="ti ti-bookmark"></i> 收集打卡'; 
+    topAction.className = 'topbar-action'; 
+    topAction.onclick = () => markVisited(e.id); 
+  }
+  
+  const processedDesc = highlightTerms(e.desc, e.terms);
+  
+  let innerExtra = `
+    <div style="margin-top: 20px;">
+      <div style="font-size: 13px; color: var(--gold); font-weight: 600; margin-bottom: 6px;">🤔 为什么会发明它？</div>
+      <div style="background:#f9f6f0;padding:12px;border-left:3px solid var(--gold);border-radius:0 8px 8px 0; font-size: 14px; color: var(--ink2); line-height: 1.6;">${e.whyMade}</div>
+    </div>
+  `;
+  if (e.analogy) {
+    innerExtra += `
+      <div style="margin-top: 16px;">
+        <div style="font-size: 13px; color: var(--gold); font-weight: 600; margin-bottom: 6px;">💡 与现代生活有何联系？</div>
+        <div style="background:#e8f5e9;border:1px solid var(--green);border-radius:8px;padding:12px;font-size:14px;color:var(--ink2);line-height:1.6;display:flex;gap:10px;align-items:flex-start;">
+          <i class="ti ti-bulb" style="color:var(--green);font-size:18px;margin-top:2px;flex-shrink:0;"></i>
+          <div>${e.analogy}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let html = `<div class="detail-hero" style="background-image: url('${e.img}');"></div>
+    <div class="detail-pad">
+      <div style="font-size:22px;font-weight:700;color:var(--ink)">${e.name} <span style="font-size:14px;color:var(--muted);font-style:italic;font-weight:normal">${e.py}</span></div>
+      <div style="margin:8px 0 20px;display:flex;gap:8px;"><span class="chip key">📍 ${e.loc}</span>${e.tags.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+      
+      <div class="dsec">
+        <div class="dsec-title">📖 展品介绍</div>
+        <div class="dsec-text text-collapse" id="desc-container">
+          <div style="margin-bottom: 8px;">${processedDesc}</div>
+          ${innerExtra}
+        </div>
+        <button class="expand-btn" id="expand-btn" onclick="toggleTextExpand()">展开完整介绍 <i class="ti ti-chevron-down"></i></button>
+      </div>
+      
+      <div class="dsec" style="background:#f9f6f0;padding:12px;border-radius:12px;border:1px solid var(--border2)"><div class="dsec-title" style="border:none;margin-bottom:4px;color:var(--gold)">💡 点击虚线术语，快速查看释义</div></div>`;
+  
+  if(e.anim) html += `<div class="anim-box"><div class="anim-title"><i class="ti ti-player-play"></i> 机械原理演示</div><div class="anim-svg-wrap">${getAnimSVG(e.anim)}</div></div>`;
+  
+  if(e.converter) html += buildConverterHTML(e);
+  
+  if(e.quiz) html += `<div class="dsec"><div class="dsec-title">🎮 互动小测验</div><div class="quiz-box"><div class="quiz-q">❓ ${e.quiz.q}</div><div id="quiz-opts-${e.id}">${e.quiz.opts.map((opt, idx) => `<div class="quiz-opt" id="opt-${e.id}-${idx}" onclick="checkQuiz(${e.id}, ${idx})">${String.fromCharCode(65 + idx)}. ${opt}</div>`).join('')}</div></div></div>`;
+  
+  html += `</div>`;
+  document.getElementById('detail-content').innerHTML = html;
+  
+  document.getElementById('detail-actions').innerHTML = `
+    <button class="btn-secondary" onclick="viewOnMap(${e.id})"><i class="ti ti-map-pin" style="font-size:20px;color:var(--gold)"></i><span style="font-size:10px;margin-top:2px">看位置</span></button>
+    <button class="btn-primary" onclick="alert('提示：为不打扰他人，请佩戴耳机或听筒模式接听。')"><i class="ti ti-headphones" style="font-size:20px"></i>听讲解</button>
+  `;
+
+  if(e.converter) {
+    if(e.converter.type === 'time') calcTime(e.id);
+    else if(e.converter.type === 'shadow') calcShadow(e.id);
+    else if(e.converter.type === 'clepsydra') calcClep(e.id);
+    else if(e.converter.type === 'distance') calcDist(e.id);
+    else if(e.converter.type === 'direction') calcDir(e.id);
+    else if(e.converter.type === 'weight') calcWeight(e.id);
+  }
+
+  setTimeout(() => {
+    const container = document.getElementById('desc-container'); const btn = document.getElementById('expand-btn');
+    if (container && container.scrollHeight <= 130) { btn.style.display = 'none'; container.classList.add('expanded'); }
+  }, 50);
+  goTab('detail');
+}
+
+function markVisited(id) {
+  const e = EXHIBITS.find(x => x.id === id);
+  if(e) { 
+    e.visited = true; 
+    const toast = document.getElementById('toast'); 
+    toast.classList.add('show'); 
+    setTimeout(() => { toast.classList.remove('show'); }, 2000); 
+    showDetail(id); 
+    updateProgress(); 
+  }
+}
+
+function checkQuiz(eid, selectedIdx) {
+  const e = EXHIBITS.find(x => x.id === eid); if(!e || !e.quiz) return;
+  const optsContainer = document.getElementById(`quiz-opts-${eid}`);
+  optsContainer.querySelectorAll('.quiz-opt').forEach(el => el.style.pointerEvents = 'none');
+  const correctIdx = e.quiz.ans;
+  if (selectedIdx === correctIdx) { document.getElementById(`opt-${eid}-${selectedIdx}`).classList.add('correct'); } 
+  else { document.getElementById(`opt-${eid}-${selectedIdx}`).classList.add('wrong'); setTimeout(() => { document.getElementById(`opt-${eid}-${correctIdx}`).classList.add('correct'); }, 300); }
+}
+
+// 启动入口
+goTab('onboard');
+</script>
+</body>
+</html>
